@@ -8,25 +8,75 @@ output:
 
 ## Loading and preprocessing the data
 
-```{r}
+
+The variables included in this dataset are:
+
+1. **steps**: Number of steps taking in a 5-minute interval (missing values are coded as NA ) 
+2. **date**: The date on which the measurement was taken in YYYY-MM-DD format 
+3. **interval**: Identifier for the 5-minute interval in which measurement was taken
+
+Read in the data and examine the structure:
+
+```{r, echo=T}
 data = read.csv('activity.csv', header = T)
-names(data)
-str(data)
 head(data)
-echo=T
+str(data)
+
 ```
 
-
-
-
 ## What is mean total number of steps taken per day?
-hasSteps <- !is.Na(data$steps)
-mean(data$steps[hasSteps])
 
+First sum the number of steps per day:
+
+```{r, echo=T}
+stepsByDay <- tapply(data$steps, data$date, sum, na.rm=T)
+
+```
+
+Now create a histogram that displays the mean and median steps per day:
+
+```{r, echo=T}
+
+hist(stepsByDay,breaks=length(stepsByDay),main = title,xlab = 'Steps',col='grey')
+
+# calculate the mean and median number of steps per day
+meanSteps <- mean(stepsByDay)
+medianSteps <- median(stepsByDay)
+        
+# mark the mean and median values on the histogram
+abline(v=meanSteps, lwd = 3, col = 'green')
+abline(v=medianSteps, lwd = 3, col = 'blue')
+        
+# create legend that displays the mean and median values
+legend('topright', lty = 1, lwd = 3, col = c('green','blue'),legend = 
+           c(paste('Mean: ', meanSteps), paste('Median: ', medianSteps)))
+
+```
 
 ## What is the average daily activity pattern?
 
+First average the data by time interval:
 
+```{r, echo=T}
+stepsByInt <- tapply(data$steps, data$interval, mean, na.rm=T)
+
+```
+
+Now create a time series plot of average number of steps taken by time interval:
+
+```{r, echo=T}
+plot(data$interval,stepsByInt, type='l',main='Average Daily Activity Pattern',
+    xlab='Time (5 Minute Intervals)', ylab='Average Number of Steps Across All 
+    Days')
+
+```
+
+Finally, calculate the 5-minute time interval which averages the most number of steps.
+
+```{r, echo=T}
+max(stepsByInt)
+which.max(stepsByInt)
+```
 
 ## Imputing missing values
 
