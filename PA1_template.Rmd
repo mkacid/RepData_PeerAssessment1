@@ -18,8 +18,13 @@ The variables included in this dataset are:
 Read in the data and examine the structure:
 
 ```{r, echo=T}
+
 data = read.csv('activity.csv', header = T)
 head(data)
+
+#formats the date column as dates
+data$date <- as.POSIXlt(data$date)
+
 str(data)
 
 ```
@@ -29,6 +34,7 @@ str(data)
 First sum the number of steps per day:
 
 ```{r, echo=T}
+
 stepsByDay <- tapply(data$steps, data$date, sum, na.rm=T)
 
 ```
@@ -37,7 +43,7 @@ Now create a histogram that displays the mean and median steps per day:
 
 ```{r, echo=T}
 
-hist(stepsByDay,breaks=length(stepsByDay),main = title,xlab = 'Steps',col='grey')
+hist(stepsByDay,breaks=length(stepsByDay),main='Steps by Day',xlab = 'Steps',col='grey')
 
 # calculate the mean and median number of steps per day
 meanSteps <- mean(stepsByDay)
@@ -49,7 +55,7 @@ abline(v=medianSteps, lwd = 3, col = 'blue')
         
 # create legend that displays the mean and median values
 legend('topright', lty = 1, lwd = 3, col = c('green','blue'),legend = 
-           c(paste('Mean: ', meanSteps), paste('Median: ', medianSteps)))
+           c(paste('Mean: ', round(meanSteps)), paste('Median: ', medianSteps)))
 
 ```
 
@@ -58,28 +64,131 @@ legend('topright', lty = 1, lwd = 3, col = c('green','blue'),legend =
 First average the data by time interval:
 
 ```{r, echo=T}
+
 stepsByInt <- tapply(data$steps, data$interval, mean, na.rm=T)
+head(stepsByInt)
 
 ```
 
 Now create a time series plot of average number of steps taken by time interval:
 
 ```{r, echo=T}
-plot(data$interval,stepsByInt, type='l',main='Average Daily Activity Pattern',
-    xlab='Time (5 Minute Intervals)', ylab='Average Number of Steps Across All 
-    Days')
+
+plot(unlist(labels(stepsByInt)),stepsByInt, type='l',main='Average Daily Activity Pattern',xlab='Time (5 Minute Intervals)', ylab='Average Number of Steps Across All Days')
 
 ```
 
 Finally, calculate the 5-minute time interval which averages the most number of steps.
 
 ```{r, echo=T}
-max(stepsByInt)
-which.max(stepsByInt)
+
+# calculates the max number of steps and the interval where it occurs
+maxSteps <- max(stepsByInt)
+maxSteps
+maxInt <- labels(stepsByInt[(which(stepsByInt==maxSteps))])
+maxInt
+
 ```
 
 ## Imputing missing values
 
+First, calculate the number of missing values in the dataset.
 
+```{r, echo=T}
+numNA <- sum(is.na(data$steps))
+numNA
+
+```
+
+Next, fill in missing values with the average for that time period.
+
+```{r, echo=T}
+# make a copy of data
+fdata <- data
+head(fdata)
+
+# function that replaces NA with the average steps for that interval
+replaceNa = function(steps, int){
+    needsReplaced <- is.na(steps)
+    if (needsReplaced==1){
+        replace <- stepsByInt[as.character(int)]
+        return (replace)
+    }
+    return (steps)
+    
+}
+
+fdata$steps <- replaceNa(fdata$steps,fdata$interval)
+
+head(fdata)
+
+
+```
+
+Now sum the number of steps per day for the filled in data:
+
+```{r, echo=T}
+
+fstepsByDay <- tapply(fdata$steps, data$date, sum, na.rm=T)
+
+```
+
+Now create a histogram that displays the mean and median steps per day:
+
+```{r, echo=T}
+
+hist(stepsByDay,breaks=length(fstepsByDay),main='Steps by Day (filled data)',xlab = 'Steps',col='grey')
+
+# calculate the mean and median number of steps per day
+fmeanSteps <- mean(fstepsByDay)
+fmedianSteps <- median(fstepsByDay)
+        
+# mark the mean and median values on the histogram
+abline(v=fmeanSteps, lwd = 3, col = 'green')
+abline(v=fmedianSteps, lwd = 3, col = 'blue')
+        
+# create legend that displays the mean and median values
+legend('topright', lty = 1, lwd = 3, col = c('green','blue'),legend = 
+           c(paste('Mean: ', round(fmeanSteps)), paste('Median: ',round(fmedianSteps)))
+
+```
+
+Finally calculate the differences between the mean and median of the original and filled data
+
+```{r,echo=T}
+
+meanDif <- fmeanSteps-meanSteps
+meanDif
+medianDif <- fmedianSteps-medianSteps
+medianDif
+```
+
+So, by filling in the missing values with the average for that time interval raised the mean by 1411.959 and the median by 371.1887.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r, echo=T}
+
+data$weekday <- weekdays(data$date)
+
+weekDay= function(x){
+    y=character(length=length(x))
+    for (i in length(x)){
+        if (x[i]=="Sunday"){
+            y[i]=="weekend"
+        }
+        else if (x[i]=="Saturday"){
+            y[i]=="weekend"
+        }
+        else{
+            y[i]=="weekday"
+        }
+        y[i]
+    }
+    return (y)
+}
+
+weekDay(data$weekday)
+
+data$weekday
+```
