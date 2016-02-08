@@ -8,10 +8,20 @@ output:
 
 ## Loading and preprocessing the data
 
+```{r}
+data = read.csv('activity.csv', header = T)
+names(data)
+str(data)
+head(data)
+echo=T
+```
+
+
 
 
 ## What is mean total number of steps taken per day?
-
+hasSteps <- !is.Na(data$steps)
+mean(data$steps[hasSteps])
 
 
 ## What is the average daily activity pattern?
